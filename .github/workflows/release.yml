@@ -1,32 +1,38 @@
 name: Release
 on:
   release:
-      types: [created]
+    types: [created]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-          os: [ubuntu-latest,windows-latest,macOS-latest]
-          include:
-            - os: windows-latest
-              releasename: 'Windows'
-            - os: ubuntu-latest
-              releasename: 'Unix'
-            - os: macOS-latest
-              releasename: 'Mac'
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        include:
+        - os: windows-latest
+          releasename: 'Windows'
+        - os: ubuntu-latest
+          releasename: 'Unix'
+        - os: macOS-latest
+          releasename: 'Mac'
     steps:
-     - uses: actions/checkout@v1
-     - uses: actions/setup-java@v2
-       with:
-         java-version: 20
-         distribution: "temurin"
-     - run: mvn verify
-     - uses: actions/upload-artifact@v1
-       with:
-           name: ${{ matrix.releasename }}
-           path: 'target/release'
-     - uses: AButler/upload-release-assets@v2.0
-       with:
-         files: 'target/release/*'
-         repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v1
+    - uses: clonedSemicolon/setup-strace@v13
+    - uses: actions/setup-java@v2
+      with:
+        java-version: 20
+        distribution: "temurin"
+    - run: mvn verify
+    - uses: actions/upload-artifact@v1
+      with:
+        name: ${{ matrix.releasename }}
+        path: 'target/release'
+    - uses: AButler/upload-release-assets@v2.0
+      with:
+        files: 'target/release/*'
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload strace artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: strace-logs-${{ github.job }}-${{ matrix.flavor || 'lint' }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index || 0 }}
+        path: /home/runner/strace_logs/
